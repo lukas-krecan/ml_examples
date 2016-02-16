@@ -18,6 +18,17 @@ def get_class(sample):
             return 2
         else:
             return 3
+# def get_class(sample):
+#     if sample[0] > 0:
+#         if sample[1] > 0:
+#             return 0
+#         else:
+#             return 1
+#     else:
+#         if sample[1] > 0:
+#             return 2
+#         else:
+#             return 3
 
 def generate_samples(length):
     samples = np.ndarray(shape=(length, 2), dtype=np.float32)
@@ -59,7 +70,27 @@ print(metrics.classification_report(val_labels, prd_val))
 
 # ***************************** Neural network ************************************************************
 from keras.models import Sequential
-from keras.layers.core import Dense, Activation
-from keras.optimizers import SGD
+from keras.layers.core import Dense, Activation, Dropout
+from keras.optimizers import SGD, Adagrad
+
+no_classes = 4
+
+def reformat_lables(labels):
+    return (np.arange(no_classes) == labels[:,None]).astype(np.float32)
+
+model = Sequential()
+model.add(Dense(output_dim=16, input_dim=2, init="glorot_uniform", activation="relu"))
+model.add(Dense(output_dim=16, init="glorot_uniform", activation="relu"))
+model.add(Dense(output_dim=no_classes, init="glorot_uniform", activation="softmax"))
+
+model.compile(loss='categorical_crossentropy', optimizer=Adagrad()) # wrong parameters of SDG may end-up in local minimum
+model.fit(tr_samples, reformat_lables(tr_labels), batch_size=1000, verbose=1, show_accuracy=True, nb_epoch=100)
+
+#print(model.layers[0].get_weights())
+
+prd_val = model.predict_classes(val_samples)
+
+print(metrics.classification_report(val_labels, prd_val))
+
 
 
